@@ -1,0 +1,28 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    Psr\Log\LoggerInterface:
+        class: Monolog\Logger
+
+    monolog.formatter.chain:
+        class: Monolog\Formatter\LineFormatter
+        arguments:
+            - "[%%datetime%%]: %%message%%\n"
+            - "Y-m-d H:i:s"
+
+    akmaks_command_chaining.command_provider:
+        class: Akmaks\Bundle\CommandChainingBundle\Providers\CommandProvider\CommandProvider
+        arguments:
+            - "@=container.hasParameter('chains') ? parameter('chains') : []"
+
+    Akmaks\Bundle\CommandChainingBundle\Providers\CommandProvider\CommandProviderInterface: '@akmaks_command_chaining.command_provider'
+
+    akmaks_command_chaining.console_listener:
+        class: Akmaks\Bundle\CommandChainingBundle\EventListener\ConsoleListener
+        arguments:
+            $logger: '@logger'
+            $commandProvider: '@akmaks_command_chaining.command_provider'
+        tags:
+            - { name: monolog.logger, channel: chain }
